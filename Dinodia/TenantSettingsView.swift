@@ -4,10 +4,17 @@ struct TenantSettingsView: View {
     @EnvironmentObject private var session: SessionStore
     @EnvironmentObject private var router: TabRouter
     @State private var alertMessage: String?
+    @State private var alexaLinked = false
+    @State private var checkingAlexa = false
+    @State private var remoteReady = false
+    @State private var showAlexa = false
 
     var body: some View {
         Form {
             statusSection
+            if session.haMode == .cloud {
+                alexaSection
+            }
             Section("Account") {
                 Text("Logged in as \(session.user?.username ?? "")")
                 Button(role: .destructive) {
@@ -44,6 +51,7 @@ struct TenantSettingsView: View {
         }
         .task {
             await refreshStatus()
+            await refreshAlexaStatusIfNeeded()
         }
         .alert("Dinodia", isPresented: Binding(get: { alertMessage != nil }, set: { _ in alertMessage = nil })) {
             Button("OK", role: .cancel) {}
@@ -59,6 +67,31 @@ struct TenantSettingsView: View {
                 Spacer()
                 modeStatusBadge
             }
+        }
+    }
+
+    private var alexaSection: some View {
+        Section("Alexa") {
+            if !remoteReady {
+                NoticeView(kind: .warning, message: "Enable Cloud Mode remote access to link Alexa.")
+            }
+            NavigationLink {
+                AlexaSetupView(initiallyLinked: alexaLinked) { linked in
+                    alexaLinked = linked
+                }
+            } label: {
+                HStack {
+                    Text("Alexa")
+                    Spacer()
+                    if checkingAlexa {
+                        ProgressView().scaleEffect(0.8)
+                    } else if alexaLinked {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                    }
+                }
+            }
+            .disabled(!remoteReady)
         }
     }
 
@@ -92,5 +125,24 @@ struct TenantSettingsView: View {
     private func refreshStatus() async {
         await session.updateHomeNetworkStatus()
         await session.updateCloudAvailability()
+    }
+
+    private func refreshAlexaStatusIfNeeded() async {
+        guard session.haMode == .cloud else {
+            await MainActor.run {
+                remoteReady = false
+                alexaLinked = false
+                checkingAlexa = false
+            }
+            return
+        }
+        checkingAlexa = true
+        let ready = await RemoteAccessService.checkRemoteAccessEnabled()
+        let linked = ready ? await AlexaLinkService.checkLinked() : false
+        await MainActor.run {
+            remoteReady = ready
+            alexaLinked = linked
+            checkingAlexa = false
+        }
     }
 }

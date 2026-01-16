@@ -42,8 +42,11 @@ enum RemoteAccessService {
     static func checkRemoteAccessEnabled() async -> Bool {
         do {
             let result: PlatformFetchResult<AlexaDevicesResponse> = try await PlatformFetch.request("/api/alexa/devices", method: "GET")
-            let devices = result.data.devices ?? []
-            return !devices.isEmpty
+            // Consider remote access available when the call succeeds, even if there are no devices yet.
+            if (200...299).contains(result.response.statusCode) {
+                return (result.data.error ?? "").isEmpty
+            }
+            return false
         } catch {
             return false
         }

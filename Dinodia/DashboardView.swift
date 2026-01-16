@@ -462,6 +462,7 @@ private struct DashboardContentView: View {
         remoteStatus = .checking
         remoteStatus = await RemoteAccessService.checkRemoteAccessEnabled() ? .enabled : .locked
     }
+
 }
 
 private func groupingId(for device: UIDevice) -> String? {
