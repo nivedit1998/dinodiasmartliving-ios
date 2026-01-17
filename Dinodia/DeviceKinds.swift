@@ -22,6 +22,10 @@ func isPrimaryDevice(_ device: UIDevice) -> Bool {
     if label == "Motion Sensor" {
         return !isDetailDevice(state: device.state)
     }
+    // Sockets carry monitoring-style states; still surface them.
+    if label == "Sockets" {
+        return true
+    }
     if isSensorDevice(device) { return false }
     if LabelRegistry.isDetailOnly(label: label) { return false }
     return !isDetailDevice(state: device.state)

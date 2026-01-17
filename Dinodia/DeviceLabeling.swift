@@ -6,6 +6,7 @@ enum LabelCategory: String {
     case tv = "TV"
     case speaker = "Speaker"
     case boiler = "Boiler"
+    case sockets = "Sockets"
     case security = "Security"
     case spotify = "Spotify"
     case `switch` = "Switch"

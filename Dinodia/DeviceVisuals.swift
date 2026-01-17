@@ -61,6 +61,14 @@ private let presets: [String: DeviceVisualPreset] = {
             iconInactiveBackground: color("#fed7aa"),
             accent: [color("#fb923c"), color("#fdba74")]
         ),
+        "Sockets": DeviceVisualPreset(
+            gradient: [color("#e5e7eb"), color("#f8fafc")],
+            inactiveBackground: color("#f8fafc"),
+            icon: "🔌",
+            iconActiveBackground: color("#0f172a"),
+            iconInactiveBackground: color("#e2e8f0"),
+            accent: [color("#0f172a"), color("#94a3b8")]
+        ),
         "Doorbell": DeviceVisualPreset(
             gradient: [color("#ffedd5"), color("#fbbf24")],
             inactiveBackground: color("#fff8e1"),
@@ -111,6 +119,9 @@ func isDeviceActive(label: String?, device: UIDevice) -> Bool {
         return state == "open" || state == "opening"
     case "Home Security", "Doorbell", "Boiler":
         return true
+    case "Sockets":
+        if let numeric = Double(state) { return numeric > 0 }
+        return state == "on"
     case "Motion Sensor":
         return activeForMotion.contains(state)
     default:

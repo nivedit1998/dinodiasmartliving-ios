@@ -65,6 +65,9 @@ func secondaryText(for device: UIDevice) -> String {
     case "Motion Sensor":
         let active = ["on", "motion", "detected", "open"].contains(state.lowercased())
         return active ? "Motion detected" : "No motion"
+    case "Sockets":
+        let unit = device.attributes["unit_of_measurement"]?.anyValue as? String
+        return unit != nil ? "\(state) \(unit!)" : (state.isEmpty ? "No data" : state)
     default:
         return state.isEmpty ? "Unknown" : state
     }
