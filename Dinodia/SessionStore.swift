@@ -58,8 +58,8 @@ final class SessionStore: ObservableObject {
         do {
             let payload = try JSONDecoder().decode(SessionPayload.self, from: data)
             user = payload.user
-            // Always start in home mode (kiosk parity); do not restore mode.
-            haMode = .home
+            // Restore last-selected mode; fallback to home if missing.
+            haMode = payload.haMode
             haConnection = nil
             Task { await self.refreshConnection() }
         } catch {
@@ -73,7 +73,7 @@ final class SessionStore: ObservableObject {
             return
         }
         // Do not persist HA secrets; only persist user and mode.
-        let payload = SessionPayload(user: currentUser, haMode: .home, haConnection: nil)
+        let payload = SessionPayload(user: currentUser, haMode: haMode, haConnection: nil)
         if let data = try? JSONEncoder().encode(payload) {
             UserDefaults.standard.set(data, forKey: storageKey)
         }
@@ -235,7 +235,6 @@ final class SessionStore: ObservableObject {
             let (context, connection) = try await DinodiaService.getUserWithHaConnection(userId: userId)
             user = AuthUser(id: context.summary.id, username: context.summary.username, role: context.summary.role)
             haConnection = connection
-            haMode = .home
             saveSession()
         } catch {
             // If unauthorized, SessionInvalidation will handle logout via PlatformFetch; ignore transient errors.
