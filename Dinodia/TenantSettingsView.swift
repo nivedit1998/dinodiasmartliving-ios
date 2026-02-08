@@ -73,7 +73,7 @@ struct TenantSettingsView: View {
     private var alexaSection: some View {
         Section("Alexa") {
             if !remoteReady {
-                NoticeView(kind: .warning, message: "Enable Cloud Mode remote access to link Alexa.")
+                NoticeView(kind: .info, message: "Alexa linking works when your Dinodia Hub has a cloud URL configured.")
             }
             NavigationLink {
                 AlexaSetupView(initiallyLinked: alexaLinked) { linked in
@@ -137,8 +137,8 @@ struct TenantSettingsView: View {
             return
         }
         checkingAlexa = true
-        let ready = await RemoteAccessService.checkRemoteAccessEnabled()
-        let linked = ready ? await AlexaLinkService.checkLinked() : false
+        let ready = true
+        let linked = await AlexaLinkService.checkLinked()
         await MainActor.run {
             remoteReady = ready
             alexaLinked = linked

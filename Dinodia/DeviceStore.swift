@@ -47,6 +47,7 @@ final class DeviceStore: ObservableObject {
     private let mode: HaMode
     private let cacheKey: String
     private var timer: Timer?
+    private var contextCache: (UserWithRelations, HaConnection)?
 
     init(userId: Int, mode: HaMode) {
         self.userId = userId
@@ -73,7 +74,14 @@ final class DeviceStore: ObservableObject {
             }
         }
         do {
-            let fetched = try await DinodiaService.fetchDevicesForUser(userId: userId, mode: mode)
+            if contextCache == nil {
+                contextCache = try? await DinodiaService.getUserWithHaConnection(userId: userId)
+            }
+            let fetched = try await DinodiaService.fetchDevicesForUser(
+                userId: userId,
+                mode: mode,
+                context: contextCache
+            )
             self.devices = fetched
             self.lastUpdated = Date()
             self.errorMessage = nil

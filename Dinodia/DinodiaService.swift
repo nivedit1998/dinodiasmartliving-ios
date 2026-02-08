@@ -43,8 +43,18 @@ enum DinodiaService {
         return try await fetchKioskContext()
     }
 
-    static func fetchDevicesForUser(userId: Int, mode: HaMode) async throws -> [UIDevice] {
-        let (relations, _) = try await getUserWithHaConnection(userId: userId)
+    static func fetchDevicesForUser(
+        userId: Int,
+        mode: HaMode,
+        context: (UserWithRelations, HaConnection)? = nil
+    ) async throws -> [UIDevice] {
+        let resolved: (UserWithRelations, HaConnection)
+        if let context {
+            resolved = context
+        } else {
+            resolved = try await getUserWithHaConnection(userId: userId)
+        }
+        let (relations, connection) = resolved
 
         if mode == .cloud {
             struct DevicesResponse: Decodable { let devices: [UIDevice]?; let error: String? }
@@ -106,7 +116,7 @@ enum DinodiaService {
             .map { $0.entityId }
         if !coverEntityIds.isEmpty {
             do {
-                let overrides = try await BlindTravelSecondsService.fetch(entityIds: coverEntityIds)
+                let overrides = try await BlindTravelSecondsService.fetchCached(entityIds: coverEntityIds, haConnectionId: connection.id)
                 if !overrides.isEmpty {
                     devices = devices.map { device in
                         if let override = overrides[device.entityId],
@@ -137,58 +147,6 @@ enum DinodiaService {
         }
 
         return devices
-    }
-
-    struct UpdateHaSettingsParams {
-        let adminId: Int
-        let haUsername: String
-        let haBaseUrl: String
-        let haCloudUrl: String?
-        let haPassword: String?
-        let haLongLivedToken: String?
-    }
-
-    static func updateHaSettings(_ params: UpdateHaSettingsParams) async throws -> HaConnection {
-        let (_, existingConnection) = try await getUserWithHaConnection(userId: params.adminId)
-        let normalizedBase = try normalizeHaBaseUrl(params.haBaseUrl)
-        var payload: [String: Any] = [
-            "haUsername": params.haUsername.trimmingCharacters(in: .whitespacesAndNewlines),
-            "haBaseUrl": normalizedBase,
-        ]
-        if let cloud = params.haCloudUrl {
-            let trimmed = cloud.trimmingCharacters(in: .whitespacesAndNewlines)
-            payload["haCloudUrl"] = trimmed.isEmpty ? NSNull() : trimmed
-        }
-        if let password = params.haPassword, !password.isEmpty {
-            payload["haPassword"] = password
-        }
-        if let token = params.haLongLivedToken, !token.isEmpty {
-            payload["haLongLivedToken"] = token
-        }
-
-        let body = try JSONSerialization.data(withJSONObject: payload)
-        struct UpdateResponse: Decodable {
-            let ok: Bool?
-            let haUsername: String?
-            let haBaseUrl: String?
-            let cloudEnabled: Bool?
-            let error: String?
-        }
-        let result: PlatformFetchResult<UpdateResponse> = try await PlatformFetch.request("/api/admin/profile/ha-settings", method: "PUT", body: body)
-        if result.data.ok == false {
-            throw DinodiaServiceError.connectionMissing(result.data.error ?? "We could not save these Dinodia Hub settings. Please try again.")
-        }
-
-        return HaConnection(
-            id: existingConnection.id,
-            baseUrl: result.data.haBaseUrl ?? normalizedBase,
-            cloudUrl: params.haCloudUrl,
-            haUsername: result.data.haUsername ?? params.haUsername,
-            haPassword: "",
-            longLivedToken: params.haLongLivedToken ?? "",
-            ownerId: existingConnection.ownerId,
-            cloudEnabled: result.data.cloudEnabled
-        )
     }
 
     private static func normalizeHaBaseUrl(_ value: String) throws -> String {

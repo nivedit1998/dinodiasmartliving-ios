@@ -170,7 +170,7 @@ private struct HomeModeGateModifier: ViewModifier {
         if checkingCloud { return }
         checkingCloud = true
         Task {
-            let res = await ModeSwitchPrompt.checkAvailability(targetMode: .cloud)
+            let res = await ModeSwitchPrompt.checkAvailability(targetMode: .cloud, session: session)
             await MainActor.run {
                 modeResult = res
                 showModeAlert = true

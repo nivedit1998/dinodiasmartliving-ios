@@ -65,7 +65,7 @@ struct ModeSwitchPrompt: View {
     private func handleTap() async {
         checking = true
         defer { checking = false }
-        let available = await ModeSwitchPrompt.checkAvailability(targetMode: targetMode)
+        let available = await ModeSwitchPrompt.checkAvailability(targetMode: targetMode, session: session)
         result = available
         showAlert = true
     }
@@ -81,12 +81,12 @@ struct ModeSwitchPrompt: View {
 
     // MARK: - Shared helpers
 
-    static func checkAvailability(targetMode: HaMode) async -> ModeSwitchResult {
+    static func checkAvailability(targetMode: HaMode, session: SessionStore) async -> ModeSwitchResult {
         if targetMode == .cloud {
-            let ok = await RemoteAccessService.checkRemoteAccessEnabled()
+            let hasCloud = session.haConnection?.cloudEnabled == true
             return ModeSwitchResult(
-                available: ok,
-                message: ok ? "Cloud Mode Available" : "Cloud Mode Unavailable"
+                available: hasCloud,
+                message: hasCloud ? "Cloud Mode Available" : "Cloud Mode Unavailable"
             )
         } else {
             let ok = await RemoteAccessService.checkHomeReachable()
@@ -101,8 +101,8 @@ struct ModeSwitchPrompt: View {
         guard let userId else { return }
         let next = targetMode
         if next == .cloud {
-            let ok = await RemoteAccessService.checkRemoteAccessEnabled()
-            guard ok else { return }
+            let hasCloud = session.haConnection?.cloudEnabled == true
+            guard hasCloud else { return }
         } else {
             let ok = await RemoteAccessService.checkHomeReachable()
             guard ok else { return }

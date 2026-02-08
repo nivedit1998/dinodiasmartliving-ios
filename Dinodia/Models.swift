@@ -36,11 +36,7 @@ struct UserWithRelations {
 
 struct HaConnection: Codable {
     let id: Int
-    let baseUrl: String?
     let cloudUrl: String?
-    let haUsername: String?
-    let haPassword: String?
-    let longLivedToken: String?
     let ownerId: Int?
     let cloudEnabled: Bool?
 }

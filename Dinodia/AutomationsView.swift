@@ -16,7 +16,7 @@ struct AutomationsView: View {
     @State private var showCreateSheet = false
     @State private var showDeviceFilter = false
     @State private var selectedEntityId: String?
-    @State private var remoteStatus: RemoteAccessStatus = .checking
+    @State private var remoteStatus: String = "enabled"
     @State private var alertMessage: String?
     private var isAdmin: Bool { session.user?.role == .ADMIN }
 
@@ -108,11 +108,6 @@ struct AutomationsView: View {
             Text(store.mode == .cloud ? "Remote automations via Dinodia Cloud." : "Automations from your Dinodia Hub.")
                 .foregroundColor(.secondary)
                 .font(.subheadline)
-            if store.mode == .cloud && remoteStatus == .locked {
-                Text("Cloud access locked. Finish remote access setup.")
-                    .font(.caption)
-                    .foregroundColor(.orange)
-            }
             if store.isSaving {
                 ProgressView()
                     .scaleEffect(0.9)
@@ -598,8 +593,7 @@ struct AutomationsView: View {
     }
 
     private func refreshRemoteStatus() async {
-        remoteStatus = .checking
-        remoteStatus = await RemoteAccessService.checkRemoteAccessEnabled() ? .enabled : .locked
+        remoteStatus = "enabled"
     }
 
     private var wifiStatus: some View {

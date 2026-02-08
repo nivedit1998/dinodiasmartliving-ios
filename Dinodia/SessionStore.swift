@@ -217,14 +217,8 @@ final class SessionStore: ObservableObject {
             return nil
         }
 
-        // Cloud mode can continue to use cloudUrl/longLivedToken if present.
-        guard let connection = haConnection else { return nil }
-        let raw = (mode == .cloud ? connection.cloudUrl : connection.baseUrl) ?? ""
-        var trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        while trimmed.hasSuffix("/") { trimmed.removeLast() }
-        let token = connection.longLivedToken ?? ""
-        if trimmed.isEmpty || token.isEmpty { return nil }
-        return HaConnectionLike(baseUrl: trimmed, longLivedToken: token)
+        // Cloud mode uses platform APIs; no direct HA connection required/stored.
+        return nil
     }
 
     // MARK: - Private helpers

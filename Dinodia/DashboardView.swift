@@ -44,7 +44,7 @@ private struct DashboardContentView: View {
     @State private var selectedArea: String = allAreasKey
     @State private var showAreaSheet = false
     @State private var areaPrefLoaded = false
-    @State private var remoteStatus: RemoteAccessStatus = .checking
+    @State private var remoteStatus: String = "enabled"
     @State private var alertMessage: String?
     @State private var kwhBaselines: [String: Double] = [:]
     @State private var pricePerKwh: Double? = nil
@@ -202,11 +202,6 @@ private struct DashboardContentView: View {
                 }
                 Spacer()
                 wifiStatus
-            }
-            if haMode == .cloud && remoteStatus == .locked {
-                Text("Cloud access locked. Finish remote access setup.")
-                    .font(.caption)
-                    .foregroundColor(.orange)
             }
             if store.isRefreshing {
                 Text("Refreshing…")
@@ -459,8 +454,7 @@ private struct DashboardContentView: View {
     }
 
     private func refreshRemoteStatus() async {
-        remoteStatus = .checking
-        remoteStatus = await RemoteAccessService.checkRemoteAccessEnabled() ? .enabled : .locked
+        remoteStatus = "enabled"
     }
 
 }

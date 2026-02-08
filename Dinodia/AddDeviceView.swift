@@ -16,7 +16,7 @@ struct AddDeviceView: View {
     @State private var stepIndex: Int = 0
     @State private var showMatterFlow = false
     @State private var formError: String?
-    @State private var remoteStatus: RemoteAccessStatus = .checking
+    @State private var remoteStatus: String = "enabled"
 
     var body: some View {
         List {
@@ -218,11 +218,6 @@ struct AddDeviceView: View {
             if session.haMode == .cloud {
                 Text("Switch to Home Mode to add devices.")
                     .font(.caption)
-                    .foregroundColor(.orange)
-            }
-            if session.haMode == .cloud && remoteStatus == .locked {
-                Text("Cloud access locked. Finish remote access setup to use cloud.")
-                    .font(.caption2)
                     .foregroundColor(.orange)
             }
         }
@@ -513,7 +508,7 @@ struct AddDeviceView: View {
     }
 
     private func refreshRemoteStatus() async {
-        remoteStatus = await RemoteAccessService.checkRemoteAccessEnabled() ? .enabled : .locked
+        remoteStatus = "enabled"
     }
 
     private var wifiStatus: some View {

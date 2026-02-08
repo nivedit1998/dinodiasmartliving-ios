@@ -12,7 +12,7 @@ final class HomeSetupStore: ObservableObject {
     @Published var sellingLoading = false
     @Published var claimCode: String?
 
-    @Published var remoteStatus: RemoteAccessStatus = .checking
+    @Published var remoteStatus: String = "enabled"
     @Published var homeReachable: Bool = true
 
     func loadTenants() async {
@@ -58,9 +58,7 @@ final class HomeSetupStore: ObservableObject {
     }
 
     func refreshRemoteAccess() async {
-        remoteStatus = .checking
-        let enabled = await RemoteAccessService.checkRemoteAccessEnabled()
-        remoteStatus = enabled ? .enabled : .locked
+        remoteStatus = "enabled"
     }
 
     func refreshHomeReachability() async {

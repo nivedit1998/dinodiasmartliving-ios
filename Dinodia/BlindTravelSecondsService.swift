@@ -12,6 +12,24 @@ struct BlindTravelSecondsResponse: Decodable {
 }
 
 enum BlindTravelSecondsService {
+    private static var cache: [String: (ts: Date, overrides: [String: Double?])] = [:]
+    private static let ttl: TimeInterval = 24 * 60 * 60
+
+    private static func cacheKey(entityIds: [String], haConnectionId: Int) -> String {
+        let sorted = entityIds.sorted().joined(separator: ",")
+        return "\(haConnectionId)::\(sorted)"
+    }
+
+    static func fetchCached(entityIds: [String], haConnectionId: Int) async throws -> [String: Double?] {
+        let key = cacheKey(entityIds: entityIds, haConnectionId: haConnectionId)
+        if let entry = cache[key], Date().timeIntervalSince(entry.ts) < ttl {
+            return entry.overrides
+        }
+        let overrides = try await fetch(entityIds: entityIds)
+        cache[key] = (Date(), overrides)
+        return overrides
+    }
+
     static func fetch(entityIds: [String]) async throws -> [String: Double?] {
         if entityIds.isEmpty { return [:] }
 

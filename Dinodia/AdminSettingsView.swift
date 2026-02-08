@@ -25,13 +25,6 @@ struct AdminSettingsView: View {
             }
             Section("Security") {
                 NavigationLink("Manage Devices") { ManageDevicesView() }
-                Button(action: {
-                    handleRemoteAccessTap()
-                }) {
-                    Text("Remote Access Setup")
-                        .foregroundColor(.primary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
             }
         }
         .navigationTitle("Settings")
@@ -66,9 +59,6 @@ struct AdminSettingsView: View {
                 DinodiaNavBarLogo()
             }
         }
-        .navigationDestination(isPresented: $navigateToRemoteAccess) {
-            RemoteAccessWizardView().environmentObject(session)
-        }
     }
 
     private var cloudBadge: some View {
@@ -100,22 +90,4 @@ struct AdminSettingsView: View {
         return session.onHomeNetwork ? "On Home Network" : "Not on Home Network"
     }
 
-    private func confirmHomeReachable() async {
-        let reachable = await RemoteAccessService.checkHomeReachable()
-        await MainActor.run {
-            reachabilitySuccess = reachable
-            reachabilityMessage = reachable
-                ? "Dinodia Hub is reachable on your home Wi‑Fi. Opening Remote Access Setup."
-                : "You must be on your Home Wi‑Fi to enable remote access."
-            showingReachabilityAlert = true
-        }
-    }
-
-    private func handleRemoteAccessTap() {
-        guard session.haMode == .home, session.onHomeNetwork else {
-            alertMessage = "You can only enable Remote Access when on Home Wi‑Fi."
-            return
-        }
-        Task { await confirmHomeReachable() }
-    }
 }
